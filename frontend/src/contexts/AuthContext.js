@@ -115,11 +115,17 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: 'CLEAR_ERROR' });
   };
 
+  // Check if user is admin (simplified for demo)
+  const isAdmin = () => {
+    return user?.username === 'admin'; // Simplified admin check
+  };
+
   const value = {
     ...state,
     login,
     logout,
     clearError,
+    isAdmin,
   };
 
   return (

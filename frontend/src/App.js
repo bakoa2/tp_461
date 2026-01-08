@@ -4,6 +4,10 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Accounts from './components/Accounts';
 import Transactions from './components/Transactions';
+import AdminDashboard from './components/AdminDashboard';
+import AdminUsers from './components/AdminUsers';
+import AdminAccounts from './components/AdminAccounts';
+import AdminTransactions from './components/AdminTransactions';
 import Navbar from './components/Navbar';
 import { AuthProvider } from './contexts/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
@@ -39,6 +43,39 @@ function App() {
                 element={
                   <PrivateRoute>
                     <Transactions />
+                  </PrivateRoute>
+                } 
+              />
+              {/* Admin Routes */}
+              <Route 
+                path="/admin/dashboard" 
+                element={
+                  <PrivateRoute>
+                    <AdminDashboard />
+                  </PrivateRoute>
+                } 
+              />
+              <Route 
+                path="/admin/users" 
+                element={
+                  <PrivateRoute>
+                    <AdminUsers />
+                  </PrivateRoute>
+                } 
+              />
+              <Route 
+                path="/admin/accounts" 
+                element={
+                  <PrivateRoute>
+                    <AdminAccounts />
+                  </PrivateRoute>
+                } 
+              />
+              <Route 
+                path="/admin/transactions" 
+                element={
+                  <PrivateRoute>
+                    <AdminTransactions />
                   </PrivateRoute>
                 } 
               />
