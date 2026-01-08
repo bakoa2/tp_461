@@ -1,0 +1,158 @@
+@startuml Objectif6_Comportements_Communs_Specialisations
+
+!theme plain
+skinparam classAttributeIconSize 0
+
+title Objectif 6: Comportements Communs et Spécialisations
+subtitle Template Method Design Pattern
+
+package "Operator Template System" {
+    
+    abstract class OperatorTemplate {
+        #String operatorName
+        #Map<String, Account> accounts
+        #List<Transaction> transactionHistory
+        +OperatorTemplate(String operatorName)
+        +final void processAccountOperation(String accountNumber, OperationType operation, double amount, Map<String, Object> parameters)
+        +final boolean validateAccountStatus(String accountNumber)
+        +void addAccount(Account account)
+        +Account getAccount(String accountNumber)
+        +List<Transaction> getTransactionHistory()
+        +String getOperatorName()
+        #final void validateAccountExists(String accountNumber)
+        #final void updateAccountBalance(String accountNumber, OperationType operation, double amount)
+        #final void recordTransaction(String accountNumber, OperationType operation, double amount, Map<String, Object> parameters)
+        #protected abstract void validateOperationPreconditions(OperationType operation, double amount, Map<String, Object> parameters)
+        #protected abstract boolean executeOperation(String accountNumber, OperationType operation, double amount, Map<String, Object> parameters)
+        #protected void postOperationProcessing(String accountNumber, OperationType operation, double amount)
+        #protected void sendOperatorSpecificNotifications(String accountNumber, OperationType operation, double amount)
+        #protected void handleOperationError(String accountNumber, OperationType operation, double amount, Exception e)
+        #protected boolean isAccountActive(Account account)
+        #protected boolean performAdditionalAccountValidation(Account account)
+    }
+    
+    class BankOperator {
+        -static final double MAX_DAILY_TRANSACTION
+        -static final double MIN_ACCOUNT_BALANCE
+        +BankOperator()
+        +protected void validateOperationPreconditions(OperationType operation, double amount, Map<String, Object> parameters)
+        +protected boolean executeOperation(String accountNumber, OperationType operation, double amount, Map<String, Object> parameters)
+        +protected void postOperationProcessing(String accountNumber, OperationType operation, double amount)
+        +protected void sendOperatorSpecificNotifications(String accountNumber, OperationType operation, double amount)
+    }
+    
+    class MobileMoneyOperator {
+        -static final double MAX_DAILY_TRANSACTION
+        -static final int MAX_TRANSACTIONS_PER_HOUR
+        +MobileMoneyOperator()
+        +protected void validateOperationPreconditions(OperationType operation, double amount, Map<String, Object> parameters)
+        +protected boolean executeOperation(String accountNumber, OperationType operation, double amount, Map<String, Object> parameters)
+        +protected void sendOperatorSpecificNotifications(String accountNumber, OperationType operation, double amount)
+        -private int getRecentTransactionCount(Account account, long timeWindowMs)
+    }
+    
+    class InternationalBankOperator {
+        -static final double MAX_INTERNATIONAL_TRANSACTION
+        -static final String[] RESTRICTED_COUNTRIES
+        +InternationalBankOperator()
+        +protected void validateOperationPreconditions(OperationType operation, double amount, Map<String, Object> parameters)
+        +protected boolean executeOperation(String accountNumber, OperationType operation, double amount, Map<String, Object> parameters)
+        +protected void postOperationProcessing(String accountNumber, OperationType operation, double amount)
+        +protected void sendOperatorSpecificNotifications(String accountNumber, OperationType operation, double amount)
+        +protected boolean performAdditionalAccountValidation(Account account)
+        -private boolean isRestrictedCountry(String country)
+        -private void validateInternationalDocuments(Map<String, Object> parameters)
+        -private void performCurrencyConversion(Map<String, Object> parameters)
+        -private void checkComplianceRules(Map<String, Object> parameters)
+        -private void reportToRegulatoryAuthorities(String accountNumber, double amount)
+    }
+    
+    enum OperationType {
+        CREDIT
+        DEBIT
+        TRANSFER
+    }
+    
+    class Account {
+        -String number
+        -double balance
+        -boolean active
+        -boolean blocked
+        -boolean hasInternationalDocs
+        -boolean kycCompliant
+        +Account(String number, double balance)
+        +String getNumber()
+        +double getBalance()
+        +void setBalance(double balance)
+        +boolean isActive()
+        +boolean isBlocked()
+        +boolean hasValidInternationalDocumentation()
+        +boolean isKYCCompliant()
+        +void setActive(boolean active)
+        +void setBlocked(boolean blocked)
+        +void setHasInternationalDocs(boolean hasInternationalDocs)
+        +void setKYCCompliant(boolean kycCompliant)
+    }
+    
+    class Transaction {
+        -static int idCounter
+        -String id
+        -String accountNumber
+        -OperationType operation
+        -double amount
+        -Map<String, Object> parameters
+        -String operatorName
+        -long timestamp
+        +Transaction(String accountNumber, OperationType operation, double amount, Map<String, Object> parameters, String operatorName)
+        +String getId()
+        +String getAccountNumber()
+        +OperationType getOperation()
+        +double getAmount()
+        +String getOperatorName()
+        +long getTimestamp()
+    }
+}
+
+OperatorTemplate <|-- BankOperator
+OperatorTemplate <|-- MobileMoneyOperator
+OperatorTemplate <|-- InternationalBankOperator
+
+OperatorTemplate --> Account : manages
+OperatorTemplate --> Transaction : creates
+OperatorTemplate --> OperationType : uses
+
+BankOperator --> Account : validates
+MobileMoneyOperator --> Account : validates
+InternationalBankOperator --> Account : validates
+
+note right of OperatorTemplate
+  Template Method Pattern:
+  - Final algorithm skeleton
+  - Abstract hook methods
+  - Common implementation
+  - Extensible framework
+end note
+
+note left of BankOperator
+  Concrete Implementation:
+  - Basic banking rules
+  - Balance limits
+  - Standard notifications
+end note
+
+note left of MobileMoneyOperator
+  Concrete Implementation:
+  - Higher transaction limits
+  - Rate limiting
+  - SMS notifications
+end note
+
+note left of InternationalBankOperator
+  Concrete Implementation:
+  - International transfers
+  - Compliance checks
+  - Currency conversion
+  - Regulatory reporting
+end note
+
+@enduml

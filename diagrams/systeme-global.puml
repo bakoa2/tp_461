@@ -1,0 +1,236 @@
+@startuml Système Bancaire Multi-opérateurs
+
+!theme plain
+skinparam classAttributeIconSize 0
+
+package "Authentification" {
+    interface IAuthentification {
+        +authentifier(credentials: Credentials): boolean
+    }
+    
+    class AuthentificationPassword {
+        +authentifier(credentials: Credentials): boolean
+    }
+    
+    class AuthentificationBiometrie {
+        +authentifier(credentials: Credentials): boolean
+    }
+    
+    class AuthentificationOTP {
+        +authentifier(credentials: Credentials): boolean
+    }
+    
+    class AuthentificationFactory {
+        +creerAuthentification(type: String): IAuthentification
+    }
+    
+    IAuthentification <|.. AuthentificationPassword
+    IAuthentification <|.. AuthentificationBiometrie
+    IAuthentification <|.. AuthentificationOTP
+    AuthentificationFactory --> IAuthentification
+}
+
+package "Opérateurs" {
+    interface IOperatorFactory {
+        +createValidator(): IAccountValidator
+        +createRateCalculator(): IRateCalculator
+        +createNotifier(): INotifier
+    }
+    
+    class BankFactory {
+        +createValidator(): IAccountValidator
+        +createRateCalculator(): IRateCalculator
+        +createNotifier(): INotifier
+    }
+    
+    class MobileMoneyFactory {
+        +createValidator(): IAccountValidator
+        +createRateCalculator(): IRateCalculator
+        +createNotifier(): INotifier
+    }
+    
+    IOperatorFactory <|.. BankFactory
+    IOperatorFactory <|.. MobileMoneyFactory
+}
+
+package "Transactions" {
+    class TransactionBuilder {
+        +addValidation(): TransactionBuilder
+        +addConversion(): TransactionBuilder
+        +addCommission(): TransactionBuilder
+        +addLogging(): TransactionBuilder
+        +addNotification(): TransactionBuilder
+        +build(): Transaction
+    }
+    
+    class Transaction {
+        -steps: List<TransactionStep>
+        +execute(): boolean
+    }
+    
+    TransactionBuilder --> Transaction
+}
+
+package "Services Globaux" {
+    class NotificationService {
+        -instance: NotificationService
+        -smsAdapter: ISMSAdapter
+        +getInstance(): NotificationService
+        +envoyerNotification(dest: String, message: String): void
+    }
+    
+    class EventManager {
+        -instance: EventManager
+        +getInstance(): EventManager
+        +publishEvent(event: Event): void
+        +subscribe(listener: EventListener): void
+    }
+    
+    class NotificationService <<Singleton>>
+    class EventManager <<Singleton>>
+}
+
+package "Adaptateurs SMS" {
+    interface ISMSAdapter {
+        +sendSMS(dest: String, message: String): void
+    }
+    
+    class SMSAdapterA {
+        +sendSMS(dest: String, message: String): void
+    }
+    
+    class SMSAdapterB {
+        +sendSMS(dest: String, message: String): void
+    }
+    
+    class SMSAdapterC {
+        +sendSMS(dest: String, message: String): void
+    }
+    
+    ISMSAdapter <|.. SMSAdapterA
+    ISMSAdapter <|.. SMSAdapterB
+    ISMSAdapter <|.. SMSAdapterC
+}
+
+package "Comptes et Comportements" {
+    abstract class Account {
+        +balance: double
+        +debit(amount: double): boolean
+        +credit(amount: double): boolean
+        +validateTransaction(amount: double): boolean
+    }
+    
+    class BankAccount {
+        +validateTransaction(amount: double): boolean
+    }
+    
+    class MobileMoneyAccount {
+        +validateTransaction(amount: double): boolean
+    }
+    
+    interface AccountDecorator {
+        +debit(amount: double): boolean
+        +credit(amount: double): boolean
+    }
+    
+    class LoggingDecorator {
+        +debit(amount: double): boolean
+        +credit(amount: double): boolean
+    }
+    
+    class LimitDecorator {
+        -dailyLimit: double
+        +debit(amount: double): boolean
+        +credit(amount: double): boolean
+    }
+    
+    Account <|-- BankAccount
+    Account <|-- MobileMoneyAccount
+    AccountDecorator <|.. LoggingDecorator
+    AccountDecorator <|.. LimitDecorator
+    AccountDecorator --> Account
+}
+
+package "Notifications" {
+    interface NotificationTarget {
+        +send(message: String): void
+    }
+    
+    class SingleAccount {
+        +send(message: String): void
+    }
+    
+    class AccountGroup {
+        -accounts: List<Account>
+        +send(message: String): void
+        +addAccount(account: Account): void
+    }
+    
+    class AllAccounts {
+        -accounts: List<Account>
+        +send(message: String): void
+    }
+    
+    NotificationTarget <|.. SingleAccount
+    NotificationTarget <|.. AccountGroup
+    NotificationTarget <|.. AllAccounts
+    AccountGroup --> NotificationTarget
+}
+
+package "Workflows" {
+    abstract class WorkflowTemplate {
+        +execute(): void
+        +validateDocuments(): void {abstract}
+        +checkBackground(): void {abstract}
+        +finalizeAndNotify(): void
+    }
+    
+    class BankAccountOpening {
+        +validateDocuments(): void
+        +checkBackground(): void
+    }
+    
+    class MobileMoneyAccountOpening {
+        +validateDocuments(): void
+        +checkBackground(): void
+    }
+    
+    WorkflowTemplate <|-- BankAccountOpening
+    WorkflowTemplate <|-- MobileMoneyOpening
+}
+
+package "Analytics" {
+    interface IAnalyticsVisitor {
+        +visit(account: Account): double
+        +visit(transaction: Transaction): double
+    }
+    
+    class CommissionCalculator {
+        +visit(account: Account): double
+        +visit(transaction: Transaction): double
+    }
+    
+    class FraudDetector {
+        +visit(account: Account): double
+        +visit(transaction: Transaction): double
+    }
+    
+    class ActivityReporter {
+        +visit(account: Account): double
+        +visit(transaction: Transaction): double
+    }
+    
+    IAnalyticsVisitor <|.. CommissionCalculator
+    IAnalyticsVisitor <|.. FraudDetector
+    IAnalyticsVisitor <|.. ActivityReporter
+}
+
+' Relations principales
+Account --> NotificationService
+Transaction --> Account
+NotificationTarget --> Account
+WorkflowTemplate --> Account
+IAnalyticsVisitor --> Account
+IAnalyticsVisitor --> Transaction
+
+@enduml

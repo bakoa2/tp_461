@@ -1,0 +1,135 @@
+@startuml Objectif2_Familles_Objets_Operateurs
+
+!theme plain
+skinparam classAttributeIconSize 0
+
+title Objectif 2: Familles d'Objets Opérateurs
+subtitle Abstract Factory Design Pattern
+
+package "Operator Factory System" {
+    
+    package "Abstract Products" {
+        interface IAccountValidator {
+            +boolean validateAccount(String accountNumber)
+            +boolean validateTransaction(double amount)
+        }
+        
+        interface IRateCalculator {
+            +double calculateTransferRate(double amount, String destinationType)
+            +double calculateCommission(double amount)
+        }
+        
+        interface INotifier {
+            +void sendNotification(String message, String destination)
+            +void sendAlert(String alertType, String details)
+        }
+        
+        interface IOperatorFactory {
+            +IAccountValidator createValidator()
+            +IRateCalculator createRateCalculator()
+            +INotifier createNotifier()
+            +String getOperatorName()
+        }
+    }
+    
+    package "Bank Products" {
+        class BankAccountValidator {
+            +boolean validateAccount(String accountNumber)
+            +boolean validateTransaction(double amount)
+        }
+        
+        class BankRateCalculator {
+            +double calculateTransferRate(double amount, String destinationType)
+            +double calculateCommission(double amount)
+        }
+        
+        class BankNotifier {
+            +void sendNotification(String message, String destination)
+            +void sendAlert(String alertType, String details)
+        }
+        
+        class BankFactory {
+            +IAccountValidator createValidator()
+            +IRateCalculator createRateCalculator()
+            +INotifier createNotifier()
+            +String getOperatorName()
+        }
+    }
+    
+    package "Mobile Money Products" {
+        class MobileMoneyAccountValidator {
+            +boolean validateAccount(String accountNumber)
+            +boolean validateTransaction(double amount)
+        }
+        
+        class MobileMoneyRateCalculator {
+            +double calculateTransferRate(double amount, String destinationType)
+            +double calculateCommission(double amount)
+        }
+        
+        class MobileMoneyNotifier {
+            +void sendNotification(String message, String destination)
+            +void sendAlert(String alertType, String details)
+        }
+        
+        class MobileMoneyFactory {
+            +IAccountValidator createValidator()
+            +IRateCalculator createRateCalculator()
+            +INotifier createNotifier()
+            +String getOperatorName()
+        }
+    }
+    
+    package "Client" {
+        class OperatorService {
+            -IOperatorFactory factory
+            -IAccountValidator validator
+            -IRateCalculator rateCalculator
+            -INotifier notifier
+            +void setOperator(IOperatorFactory factory)
+            +boolean processTransaction(String accountNumber, double amount, String destinationType)
+            +String getCurrentOperator()
+        }
+    }
+}
+
+IAccountValidator <|.. BankAccountValidator
+IAccountValidator <|.. MobileMoneyAccountValidator
+
+IRateCalculator <|.. BankRateCalculator
+IRateCalculator <|.. MobileMoneyRateCalculator
+
+INotifier <|.. BankNotifier
+INotifier <|.. MobileMoneyNotifier
+
+IOperatorFactory <|.. BankFactory
+IOperatorFactory <|.. MobileMoneyFactory
+
+BankFactory --> BankAccountValidator : creates
+BankFactory --> BankRateCalculator : creates
+BankFactory --> BankNotifier : creates
+
+MobileMoneyFactory --> MobileMoneyAccountValidator : creates
+MobileMoneyFactory --> MobileMoneyRateCalculator : creates
+MobileMoneyFactory --> MobileMoneyNotifier : creates
+
+OperatorService --> IOperatorFactory : uses
+OperatorService --> IAccountValidator : uses
+OperatorService --> IRateCalculator : uses
+OperatorService --> INotifier : uses
+
+note right of OperatorService
+  Client Code:
+  - Works with abstractions only
+  - Runtime operator switching
+  - Consistent object families
+end note
+
+note bottom of IOperatorFactory
+  Abstract Factory:
+  - Creates families of related objects
+  - Ensures compatibility
+  - Isolates client from implementations
+end note
+
+@enduml

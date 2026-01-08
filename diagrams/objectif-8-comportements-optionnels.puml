@@ -1,0 +1,219 @@
+@startuml Objectif8_Comportements_Optionnels_Compte
+
+!theme plain
+skinparam classAttributeIconSize 0
+
+title Objectif 8: Comportements Optionnels de Compte
+subtitle Decorator Design Pattern
+
+package "Account Decoration System" {
+    
+    interface Account {
+        +String getAccountNumber()
+        +String getOwnerName()
+        +double getBalance()
+        +boolean debit(double amount)
+        +boolean credit(double amount)
+        +String getAccountType()
+        +List<String> getTransactionHistory()
+        +boolean isActive()
+        +void setActive(boolean active)
+    }
+    
+    class BasicAccount {
+        -String accountNumber
+        -String ownerName
+        -double balance
+        -String accountType
+        -List<String> transactionHistory
+        -boolean active
+        +BasicAccount(String accountNumber, String ownerName, double initialBalance, String accountType)
+        +String getAccountNumber()
+        +String getOwnerName()
+        +double getBalance()
+        +boolean debit(double amount)
+        +boolean credit(double amount)
+        +String getAccountType()
+        +List<String> getTransactionHistory()
+        +boolean isActive()
+        +void setActive(boolean active)
+        -protected void setBalance(double balance)
+        -protected void addTransaction(String transaction)
+    }
+    
+    abstract class AccountDecorator {
+        #Account decoratedAccount
+        +AccountDecorator(Account account)
+        +String getAccountNumber()
+        +String getOwnerName()
+        +double getBalance()
+        +String getAccountType()
+        +List<String> getTransactionHistory()
+        +boolean isActive()
+        +void setActive(boolean active)
+        #protected void logDecoratorAction(String action)
+    }
+    
+    class LoggingDecorator {
+        -List<String> detailedLogs
+        -boolean logAllTransactions
+        +LoggingDecorator(Account account, boolean logAllTransactions)
+        +boolean debit(double amount)
+        +boolean credit(double amount)
+        +List<String> getDetailedLogs()
+        +void clearLogs()
+        +void setLogAllTransactions(boolean logAllTransactions)
+        -private String createDetailedLog(String operation, double amount, boolean success)
+        +String getAccountType()
+    }
+    
+    class TemporaryLockDecorator {
+        -LocalDateTime lockEndTime
+        -String lockReason
+        -boolean isLocked
+        -int failedAttempts
+        +TemporaryLockDecorator(Account account)
+        +boolean debit(double amount)
+        +boolean credit(double amount)
+        +void lockAccount(String reason)
+        +void unlockAccount()
+        +boolean isCurrentlyLocked()
+        +LocalDateTime getLockEndTime()
+        +String getLockReason()
+        +int getFailedAttempts()
+        +String getAccountType()
+    }
+    
+    class DailyLimitDecorator {
+        -double dailyLimit
+        -double dailyDebitTotal
+        -LocalDateTime lastResetDate
+        +DailyLimitDecorator(Account account, double dailyLimit)
+        +boolean debit(double amount)
+        +boolean credit(double amount)
+        +double getDailyLimit()
+        +void setDailyLimit(double dailyLimit)
+        +double getDailyDebitTotal()
+        +double getRemainingDailyLimit()
+        +LocalDateTime getLastResetDate()
+        -private void resetDailyLimitIfNeeded()
+        +String getAccountType()
+    }
+    
+    class SecurityNotificationDecorator {
+        -List<String> securityEvents
+        -double largeTransactionThreshold
+        +SecurityNotificationDecorator(Account account, double largeTransactionThreshold)
+        +boolean debit(double amount)
+        +boolean credit(double amount)
+        +List<String> getSecurityEvents()
+        +void clearSecurityEvents()
+        +double getLargeTransactionThreshold()
+        +void setLargeTransactionThreshold(double threshold)
+        -private void checkSecurityBeforeTransaction(String operation, double amount)
+        -private void checkSecurityAfterTransaction(String operation, double amount)
+        -private boolean detectUnusualActivity(double amount)
+        +String getAccountType()
+    }
+    
+    class AccountDecoratorFactory {
+        +static Account createAccountWithLogging(Account account, boolean logAllTransactions)
+        +static Account createAccountWithLock(Account account)
+        +static Account createAccountWithDailyLimit(Account account, double dailyLimit)
+        +static Account createAccountWithSecurity(Account account, double threshold)
+        +static Account createPremiumAccount(Account account, double dailyLimit, double securityThreshold)
+        +static Account createSecureAccount(Account account, double dailyLimit)
+        +static Account createVipAccount(Account account, double securityThreshold)
+    }
+    
+    class DecoratedAccountService {
+        -Map<String, Account> accounts
+        +DecoratedAccountService()
+        +void addAccount(String key, Account account)
+        +Account getAccount(String key)
+        +boolean processTransaction(String accountKey, String operation, double amount)
+        +void printAccountStatus(String accountKey)
+        +void demonstrateStacking()
+    }
+}
+
+Account <|.. BasicAccount
+Account <|.. AccountDecorator
+AccountDecorator <|-- LoggingDecorator
+AccountDecorator <|-- TemporaryLockDecorator
+AccountDecorator <|-- DailyLimitDecorator
+AccountDecorator <|-- SecurityNotificationDecorator
+
+AccountDecorator --> Account : wraps (delegation)
+
+LoggingDecorator --> Account : delegates to
+TemporaryLockDecorator --> Account : delegates to
+DailyLimitDecorator --> Account : delegates to
+SecurityNotificationDecorator --> Account : delegates to
+
+AccountDecoratorFactory --> Account : creates
+AccountDecoratorFactory --> LoggingDecorator : creates
+AccountDecoratorFactory --> TemporaryLockDecorator : creates
+AccountDecoratorFactory --> DailyLimitDecorator : creates
+AccountDecoratorFactory --> SecurityNotificationDecorator : creates
+
+DecoratedAccountService --> Account : manages
+DecoratedAccountService --> AccountDecoratorFactory : uses
+
+note right of Account
+  Component Interface:
+  - Core account operations
+  - Uniform interface
+  - Decorator compatibility
+end note
+
+note left of BasicAccount
+  Concrete Component:
+  - Base account implementation
+  - Core business logic
+  - No decorations
+end note
+
+note top of AccountDecorator
+  Base Decorator:
+  - Wrapper functionality
+  - Delegation pattern
+  - Template for decorators
+end note
+
+note left of LoggingDecorator
+  Concrete Decorator:
+  - Transaction logging
+  - Detailed audit trail
+  - Configurable verbosity
+end note
+
+note left of TemporaryLockDecorator
+  Concrete Decorator:
+  - Failed attempt tracking
+  - Automatic locking
+  - Time-based security
+end note
+
+note left of DailyLimitDecorator
+  Concrete Decorator:
+  - Daily spending limits
+  - Automatic reset
+  - Balance protection
+end note
+
+note left of SecurityNotificationDecorator
+  Concrete Decorator:
+  - Large transaction alerts
+  - Unusual activity detection
+  - Security event logging
+end note
+
+note bottom of AccountDecoratorFactory
+  Factory Pattern:
+  - Decorator combinations
+  - Predefined configurations
+  - Simplified creation
+end note
+
+@enduml

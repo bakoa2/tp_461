@@ -1,0 +1,147 @@
+@startuml Objectif3_Construction_Transactions
+
+!theme plain
+skinparam classAttributeIconSize 0
+
+title Objectif 3: Construction de Transactions
+subtitle Builder Design Pattern
+
+package "Transaction Builder System" {
+    
+    package "Core Interfaces" {
+        interface TransactionStep {
+            +boolean execute(TransactionContext context)
+            +String getDescription()
+        }
+        
+        interface TransactionStepBuilder {
+            +TransactionStepBuilder addStep(TransactionStep step)
+            +TransactionStepBuilder removeStep(String stepName)
+            +Transaction build()
+        }
+    }
+    
+    class TransactionContext {
+        -String sourceAccount
+        -String destinationAccount
+        -double amount
+        -String currency
+        -Map<String, Object> metadata
+        -List<String> executionLog
+        +TransactionContext(String source, String dest, double amount)
+        +String getSourceAccount()
+        +String getDestinationAccount()
+        +double getAmount()
+        +String getCurrency()
+        +void setCurrency(String currency)
+        +void addMetadata(String key, Object value)
+        +void logExecution(String message)
+    }
+    
+    package "Concrete Steps" {
+        class ValidationStep {
+            -IAccountValidator validator
+            +ValidationStep(IAccountValidator validator)
+            +boolean execute(TransactionContext context)
+            +String getDescription()
+        }
+        
+        class CurrencyConversionStep {
+            -String targetCurrency
+            -double conversionRate
+            +CurrencyConversionStep(String target, double rate)
+            +boolean execute(TransactionContext context)
+            +String getDescription()
+        }
+        
+        class CommissionStep {
+            -IRateCalculator rateCalculator
+            -String transactionType
+            +CommissionStep(IRateCalculator calc, String type)
+            +boolean execute(TransactionContext context)
+            +String getDescription()
+        }
+        
+        class LoggingStep {
+            -String logLevel
+            +LoggingStep(String logLevel)
+            +boolean execute(TransactionContext context)
+            +String getDescription()
+        }
+        
+        class NotificationStep {
+            -INotifier notifier
+            -boolean notifySource
+            -boolean notifyDestination
+            +NotificationStep(INotifier notifier, boolean source, boolean dest)
+            +boolean execute(TransactionContext context)
+            +String getDescription()
+        }
+    }
+    
+    class TransactionBuilder {
+        -List<TransactionStep> steps
+        -TransactionContext context
+        +TransactionBuilder(String source, String dest, double amount)
+        +TransactionBuilder addValidation(IAccountValidator validator)
+        +TransactionBuilder addCurrencyConversion(String targetCurrency, double rate)
+        +TransactionBuilder addCommission(IRateCalculator rateCalculator, String transactionType)
+        +TransactionBuilder addLogging(String logLevel)
+        +TransactionBuilder addNotification(INotifier notifier, boolean notifySource, boolean notifyDestination)
+        +Transaction build()
+        +static TransactionBuilder createShortTransaction(String source, String dest, double amount)
+        +static TransactionBuilder createFullTransaction(String source, String dest, double amount, IAccountValidator validator, IRateCalculator rateCalculator, INotifier notifier)
+    }
+    
+    class Transaction {
+        -TransactionContext context
+        -List<TransactionStep> steps
+        -boolean executed
+        -boolean successful
+        +Transaction(TransactionContext context, List<TransactionStep> steps)
+        +boolean execute()
+        +TransactionContext getContext()
+        +boolean isExecuted()
+        +boolean isSuccessful()
+        +void printSummary()
+    }
+}
+
+TransactionStep <|.. ValidationStep
+TransactionStep <|.. CurrencyConversionStep
+TransactionStep <|.. CommissionStep
+TransactionStep <|.. LoggingStep
+TransactionStep <|.. NotificationStep
+
+TransactionStepBuilder <|.. TransactionBuilder
+
+TransactionBuilder ..|> TransactionStepBuilder
+TransactionBuilder --> TransactionStep : creates
+TransactionBuilder --> TransactionContext : creates
+TransactionBuilder --> Transaction : builds
+
+Transaction --> TransactionContext : contains
+Transaction --> TransactionStep : executes
+
+ValidationStep --> IAccountValidator : uses
+CurrencyConversionStep --> TransactionContext : modifies
+CommissionStep --> IRateCalculator : uses
+LoggingStep --> TransactionContext : logs
+NotificationStep --> INotifier : uses
+
+note right of TransactionBuilder
+  Builder Pattern:
+  - Step-by-step construction
+  - Fluent API
+  - Flexible configuration
+  - Reusable building blocks
+end note
+
+note bottom of Transaction
+  Final Product:
+  - Encapsulates execution logic
+  - Maintains execution state
+  - Provides summary information
+end note
+
+@enduml

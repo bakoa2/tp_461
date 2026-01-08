@@ -1,0 +1,86 @@
+@startuml Objectif1_Authentification_Multiple
+
+!theme plain
+skinparam classAttributeIconSize 0
+
+title Objectif 1: Authentification Multiple
+subtitle Strategy + Factory Design Patterns
+
+package "Authentication System" {
+    
+    interface IAuthentification {
+        +boolean authentifier(Credentials credentials)
+    }
+    
+    class Credentials {
+        -String password
+        -String biometricData
+        -String otp
+        -String arData
+        +Credentials(String password)
+        +String getPassword()
+        +Credentials setBiometricData(String data)
+        +String getBiometricData()
+        +Credentials setOtp(String otp)
+        +String getOtp()
+        +Credentials setArData(String arData)
+        +String getArData()
+    }
+    
+    class AuthentificationPassword {
+        +boolean authentifier(Credentials credentials)
+    }
+    
+    class AuthentificationBiometrie {
+        +boolean authentifier(Credentials credentials)
+    }
+    
+    class AuthentificationOTP {
+        +boolean authentifier(Credentials credentials)
+    }
+    
+    class AuthentificationRealiteAugmentee {
+        +boolean authentifier(Credentials credentials)
+    }
+    
+    class AuthentificationFactory {
+        +static IAuthentification creerAuthentification(String type)
+    }
+    
+    class AuthentificationService {
+        -IAuthentification authentification
+        +void setAuthentificationMethod(String type)
+        +boolean authentifierUser(Credentials credentials)
+    }
+}
+
+IAuthentification <|.. AuthentificationPassword
+IAuthentification <|.. AuthentificationBiometrie
+IAuthentification <|.. AuthentificationOTP
+IAuthentification <|.. AuthentificationRealiteAugmentee
+
+AuthentificationFactory --> IAuthentification : creates
+AuthentificationFactory --> AuthentificationPassword : creates
+AuthentificationFactory --> AuthentificationBiometrie : creates
+AuthentificationFactory --> AuthentificationOTP : creates
+AuthentificationFactory --> AuthentificationRealiteAugmentee : creates
+
+AuthentificationService --> IAuthentification : uses
+AuthentificationService --> AuthentificationFactory : uses
+AuthentificationService --> Credentials : uses
+
+note right of AuthentificationService
+  Strategy Pattern:
+  - Multiple authentication algorithms
+  - Runtime switching
+  - Open/Closed Principle
+end note
+
+note bottom of AuthentificationFactory
+  Factory Pattern:
+  - Centralized creation logic
+  - Type-based instantiation
+  - Easy extension
+end note
+
+@enduml

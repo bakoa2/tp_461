@@ -1,0 +1,183 @@
+@startuml Objectif7_Cibles_Notification
+
+!theme plain
+skinparam classAttributeIconSize 0
+
+title Objectif 7: Cibles de Notification
+subtitle Composite Design Pattern
+
+package "Notification Target System" {
+    
+    interface NotificationTarget {
+        +void send(String message)
+        +void add(NotificationTarget target)
+        +void remove(NotificationTarget target)
+        +NotificationTarget getChild(int index)
+        +String getName()
+        +String getDescription()
+        +int getRecipientCount()
+        +List<String> getRecipientDetails()
+    }
+    
+    class SingleAccount {
+        -String accountNumber
+        -String ownerName
+        -String email
+        -String phoneNumber
+        -NotificationPreference preference
+        +SingleAccount(String accountNumber, String ownerName, String email, String phoneNumber)
+        +void send(String message)
+        +void add(NotificationTarget target)
+        +void remove(NotificationTarget target)
+        +NotificationTarget getChild(int index)
+        +String getName()
+        +String getDescription()
+        +int getRecipientCount()
+        +List<String> getRecipientDetails()
+        -private void sendEmail(String message)
+        -private void sendSMS(String message)
+        -private void sendPushNotification(String message)
+    }
+    
+    class AccountGroup {
+        -String groupName
+        -String description
+        -List<NotificationTarget> children
+        -NotificationPriority priority
+        +AccountGroup(String groupName, String description)
+        +void send(String message)
+        +void add(NotificationTarget target)
+        +void remove(NotificationTarget target)
+        +NotificationTarget getChild(int index)
+        +String getName()
+        +String getDescription()
+        +int getRecipientCount()
+        +List<String> getRecipientDetails()
+        +void setPriority(NotificationPriority priority)
+        +NotificationPriority getPriority()
+        +void printHierarchy()
+        +List<SingleAccount> getFlatListOfAccounts()
+        -private String applyPriority(String message)
+        -private void printHierarchy(int level)
+    }
+    
+    class AllAccounts {
+        -Map<String, SingleAccount> allAccounts
+        -List<AccountGroup> operatorGroups
+        -String systemName
+        +AllAccounts(String systemName)
+        +void send(String message)
+        +void add(NotificationTarget target)
+        +void remove(NotificationTarget target)
+        +NotificationTarget getChild(int index)
+        +String getName()
+        +String getDescription()
+        +int getRecipientCount()
+        +List<String> getRecipientDetails()
+        +SingleAccount getAccount(String accountNumber)
+        +List<AccountGroup> getOperatorGroups()
+        +Map<String, Integer> getStatisticsByOperator()
+    }
+    
+    class ComposedNotification {
+        -String title
+        -String content
+        -List<String> attachments
+        -NotificationTarget target
+        -NotificationPriority priority
+        +ComposedNotification(String title, String content, NotificationTarget target)
+        +void send(String message)
+        +void addAttachment(String attachment)
+        +void add(NotificationTarget target)
+        +void remove(NotificationTarget target)
+        +NotificationTarget getChild(int index)
+        +String getName()
+        +String getDescription()
+        +int getRecipientCount()
+        +List<String> getRecipientDetails()
+        -private String buildComposedMessage(String message)
+    }
+    
+    class NotificationServiceComposite {
+        -AllAccounts systemWideTargets
+        -Map<String, AccountGroup> operatorGroups
+        +NotificationServiceComposite(String systemName)
+        +void sendToAccount(String accountNumber, String message)
+        +void sendToGroup(String groupName, String message)
+        +void sendToAll(String message)
+        +void sendComposedNotification(String title, String content, String targetKey, String message)
+        +void createGroup(String groupName, String description)
+        +void addAccountToGroup(String groupName, SingleAccount account)
+        +void addAccountToSystem(SingleAccount account)
+        -private NotificationTarget findTarget(String key)
+        +void printSystemStatistics()
+        +void printGroupHierarchy()
+    }
+    
+    enum NotificationPreference {
+        EMAIL
+        SMS
+        PUSH
+        BOTH
+    }
+    
+    enum NotificationPriority {
+        LOW
+        NORMAL
+        HIGH
+    }
+}
+
+NotificationTarget <|.. SingleAccount
+NotificationTarget <|.. AccountGroup
+NotificationTarget <|.. AllAccounts
+NotificationTarget <|.. ComposedNotification
+
+SingleAccount --> NotificationPreference : uses
+AccountGroup --> NotificationPriority : uses
+AccountGroup --> NotificationTarget : contains (composition)
+AllAccounts --> SingleAccount : contains
+AllAccounts --> AccountGroup : contains
+ComposedNotification --> NotificationTarget : wraps (delegation)
+ComposedNotification --> NotificationPriority : uses
+
+NotificationServiceComposite --> AllAccounts : uses
+NotificationServiceComposite --> AccountGroup : uses
+NotificationServiceComposite --> SingleAccount : uses
+
+note right of NotificationTarget
+  Component Interface:
+  - Uniform operations
+  - Composite structure support
+  - Leaf and composite compatibility
+end note
+
+note left of SingleAccount
+  Leaf Component:
+  - Individual account
+  - No children
+  - Direct notification
+end note
+
+note left of AccountGroup
+  Composite Component:
+  - Contains targets
+  - Recursive operations
+  - Group management
+end note
+
+note left of AllAccounts
+  Root Composite:
+  - System-wide management
+  - All accounts container
+  - Global operations
+end note
+
+note bottom of ComposedNotification
+  Wrapper Composite:
+  - Message composition
+  - Target delegation
+  - Enhanced notifications
+end note
+
+@enduml

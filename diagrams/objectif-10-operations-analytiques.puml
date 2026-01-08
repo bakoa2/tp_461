@@ -1,0 +1,227 @@
+@startuml Objectif10_Operations_Analytiques
+
+!theme plain
+skinparam classAttributeIconSize 0
+
+title Objectif 10: Opérations Analytiques
+subtitle Visitor Design Pattern
+
+package "Analytics Visitor System" {
+    
+    interface IAnalyticsVisitor {
+        +double visit(Account account)
+        +double visit(Transaction transaction)
+        +String getAnalysisName()
+        +Map<String, Object> getResults()
+        +void reset()
+    }
+    
+    interface Visitable {
+        +double accept(IAnalyticsVisitor visitor)
+    }
+    
+    class Account implements Visitable {
+        -String accountNumber
+        -String ownerName
+        -double balance
+        -String accountType
+        -List<Transaction> transactions
+        -boolean isActive
+        -long creationDate
+        +Account(String accountNumber, String ownerName, double initialBalance, String accountType)
+        +double accept(IAnalyticsVisitor visitor)
+        +String getAccountNumber()
+        +String getOwnerName()
+        +double getBalance()
+        +String getAccountType()
+        +List<Transaction> getTransactions()
+        +boolean isActive()
+        +long getCreationDate()
+        +void addTransaction(Transaction transaction)
+        +void setBalance(double balance)
+        +void setActive(boolean active)
+    }
+    
+    class Transaction implements Visitable {
+        -String transactionId
+        -String sourceAccount
+        -String destinationAccount
+        -double amount
+        -String transactionType
+        -long timestamp
+        -Map<String, Object> metadata
+        +Transaction(String transactionId, String sourceAccount, String destinationAccount, double amount, String transactionType)
+        +double accept(IAnalyticsVisitor visitor)
+        +String getTransactionId()
+        +String getSourceAccount()
+        +String getDestinationAccount()
+        +double getAmount()
+        +String getTransactionType()
+        +long getTimestamp()
+        +Map<String, Object> getMetadata()
+        +void addMetadata(String key, Object value)
+    }
+    
+    class CommissionCalculatorVisitor implements IAnalyticsVisitor {
+        -double totalCommissions
+        -Map<String, Double> commissionsByAccount
+        -Map<String, Double> commissionsByType
+        -int transactionCount
+        +CommissionCalculatorVisitor()
+        +double visit(Account account)
+        +double visit(Transaction transaction)
+        +String getAnalysisName()
+        +Map<String, Object> getResults()
+        +void reset()
+        -private double calculateCommission(Transaction transaction)
+    }
+    
+    class FraudDetectionVisitor implements IAnalyticsVisitor {
+        -int suspiciousTransactions
+        -Map<String, Integer> suspiciousTransactionsByAccount
+        -Map<String, String> fraudReasons
+        -List<Map<String, Object>> detectedFrauds
+        +FraudDetectionVisitor()
+        +double visit(Account account)
+        +double visit(Transaction transaction)
+        +String getAnalysisName()
+        +Map<String, Object> getResults()
+        +void reset()
+        -private void analyzeAccountBehavior(Account account)
+        -private double calculateFraudScore(Transaction transaction)
+        -private String determineFraudReason(Transaction transaction, double fraudScore)
+        -private double calculateFraudRate()
+    }
+    
+    class ActivityReportVisitor implements IAnalyticsVisitor {
+        -Map<String, Object> summaryStats
+        -Map<String, AccountActivity> accountActivities
+        +ActivityReportVisitor()
+        +double visit(Account account)
+        +double visit(Transaction transaction)
+        +String getAnalysisName()
+        +Map<String, Object> getResults()
+        +void reset()
+        -private void analyzeAccountActivity(Account account)
+        -private void updateGlobalStats(Transaction transaction)
+    }
+    
+    class AccountActivity {
+        -String accountNumber
+        -String accountType
+        -double balance
+        -int transactionCount
+        -long accountAge
+        -double totalTransactionVolume
+        -double averageTransactionAmount
+        -long lastTransactionTime
+        +String getAccountNumber()
+        +void setAccountNumber(String accountNumber)
+        +String getAccountType()
+        +void setAccountType(String accountType)
+        +double getBalance()
+        +void setBalance(double balance)
+        +int getTransactionCount()
+        +void setTransactionCount(int transactionCount)
+        +long getAccountAge()
+        +void setAccountAge(long accountAge)
+        +double getTotalTransactionVolume()
+        +void setTotalTransactionVolume(double totalTransactionVolume)
+        +double getAverageTransactionAmount()
+        +void setAverageTransactionAmount(double averageTransactionAmount)
+        +long getLastTransactionTime()
+        +void setLastTransactionTime(long lastTransactionTime)
+        +String toString()
+    }
+    
+    class AnalyticsService {
+        -List<Visitable> visitableElements
+        -List<IAnalyticsVisitor> visitors
+        +AnalyticsService()
+        +void addVisitableElement(Visitable element)
+        +void addVisitor(IAnalyticsVisitor visitor)
+        +Map<String, Map<String, Object>> runAllAnalyses()
+        +Map<String, Object> runSpecificAnalysis(String analysisName)
+        +void clearElements()
+        +void clearVisitors()
+        +void printAvailableAnalyses()
+        +void printSummary()
+        -private IAnalyticsVisitor findVisitor(String analysisName)
+    }
+}
+
+IAnalyticsVisitor <|.. CommissionCalculatorVisitor
+IAnalyticsVisitor <|.. FraudDetectionVisitor
+IAnalyticsVisitor <|.. ActivityReportVisitor
+
+Visitable <|.. Account
+Visitable <|.. Transaction
+
+Account --> Transaction : contains
+
+CommissionCalculatorVisitor --> Account : visits
+CommissionCalculatorVisitor --> Transaction : visits
+FraudDetectionVisitor --> Account : visits
+FraudDetectionVisitor --> Transaction : visits
+ActivityReportVisitor --> Account : visits
+ActivityReportVisitor --> Transaction : visits
+
+AnalyticsService --> Visitable : manages
+AnalyticsService --> IAnalyticsVisitor : manages
+
+CommissionCalculatorVisitor --> AccountActivity : creates
+FraudDetectionVisitor --> AccountActivity : creates
+ActivityReportVisitor --> AccountActivity : creates
+
+note right of IAnalyticsVisitor
+  Visitor Interface:
+  - Analysis operations
+  - Visit methods
+  - Result management
+  - State reset
+end note
+
+note left of Account
+  Element Interface:
+  - Accepts visitors
+  - Business entity
+  - No modifications
+end note
+
+note left of Transaction
+  Element Interface:
+  - Accepts visitors
+  - Business entity
+  - Transaction data
+end note
+
+note top of CommissionCalculatorVisitor
+  Concrete Visitor:
+  - Commission calculation
+  - Transaction analysis
+  - Aggregated reporting
+end note
+
+note top of FraudDetectionVisitor
+  Concrete Visitor:
+  - Fraud detection
+  - Risk scoring
+  - Pattern analysis
+end note
+
+note top of ActivityReportVisitor
+  Concrete Visitor:
+  - Activity reporting
+  - Statistics aggregation
+  - Account profiling
+end note
+
+note bottom of AnalyticsService
+  Visitor Manager:
+  - Element coordination
+  - Visitor orchestration
+  - Result collection
+  - Analysis scheduling
+end note
+
+@enduml

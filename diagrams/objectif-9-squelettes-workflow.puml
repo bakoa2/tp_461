@@ -1,0 +1,151 @@
+@startuml Objectif9_Squelettes_Workflow
+
+!theme plain
+skinparam classAttributeIconSize 0
+
+title Objectif 9: Squelettes de Workflow
+subtitle Template Method Design Pattern (Workflows)
+
+package "Workflow Template System" {
+    
+    abstract class WorkflowTemplate {
+        #String workflowName
+        #List<String> executionSteps
+        #Map<String, Object> context
+        #List<String> executionLog
+        +WorkflowTemplate(String workflowName)
+        +final void execute(Map<String, Object> inputData)
+        +String getWorkflowName()
+        +List<String> getExecutionLog()
+        +Map<String, Object> getContext()
+        #protected abstract boolean validateDocuments()
+        #protected abstract boolean checkBackground()
+        #protected abstract boolean finalValidation()
+        #protected boolean processRequest()
+        #protected boolean performAdditionalPreValidation()
+        #protected boolean performAdditionalPostValidation()
+        #protected void generateStandardReports()
+        #protected void generateOperatorSpecificReports()
+        #protected void sendStandardNotifications()
+        #protected void sendOperatorSpecificNotifications()
+        #protected void logStep(String step)
+        #protected void logError(String error)
+        #protected void putContext(String key, Object value)
+        #protected <T> T getContext(String key, Class<T> type)
+        -private final void initializeContext(Map<String, Object> inputData)
+        -private final boolean executeMainSteps()
+        -private final boolean preProcessValidation()
+        -private final boolean postProcessValidation()
+        -private final void completeWorkflow(boolean success, String message)
+        -private final void generateReports()
+        -private final void sendNotifications()
+    }
+    
+    class BankAccountOpeningWorkflow {
+        -static final String[] REQUIRED_DOCUMENTS
+        -static final String[] RESTRICTED_COUNTRIES
+        +BankAccountOpeningWorkflow()
+        +protected boolean validateDocuments()
+        +protected boolean checkBackground()
+        +protected boolean finalValidation()
+        +protected void generateOperatorSpecificReports()
+        +protected void sendOperatorSpecificNotifications()
+        -private String calculateRiskLevel()
+        -private double calculateCreditLimit()
+        -private double calculateAccountFees()
+        -private String generateAccountNumber()
+    }
+    
+    class MobileMoneyAccountOpeningWorkflow {
+        -static final String[] REQUIRED_DOCUMENTS
+        -static final String[] SUPPORTED_COUNTRIES
+        +MobileMoneyAccountOpeningWorkflow()
+        +protected boolean validateDocuments()
+        +protected boolean checkBackground()
+        +protected boolean finalValidation()
+        +protected void generateOperatorSpecificReports()
+        +protected void sendOperatorSpecificNotifications()
+        +protected boolean performAdditionalPreValidation()
+        -private boolean verifyAdultAge(String birthDate)
+        -private double calculateTransactionLimit()
+        -private double calculateDailyLimit()
+        -private List<String> getSupportedServices()
+        -private String generateMobileAccountNumber()
+    }
+    
+    class WorkflowService {
+        -Map<String, WorkflowTemplate> availableWorkflows
+        +WorkflowService()
+        +void executeWorkflow(String workflowKey, Map<String, Object> inputData)
+        +void listAvailableWorkflows()
+        +WorkflowTemplate getWorkflow(String workflowKey)
+        +void printWorkflowExecutionLog(String workflowKey)
+        -private void registerWorkflows()
+    }
+    
+    class WorkflowExecutionContext {
+        -String workflowName
+        -String accountId
+        -String requestType
+        -Object result
+        -long startTime
+        -long endTime
+        -long duration
+        -boolean success
+        +WorkflowExecutionContext(String workflowName, String accountId, String requestType)
+        +String getWorkflowName()
+        +String getAccountId()
+        +String getRequestType()
+        +Object getResult()
+        +long getStartTime()
+        +long getEndTime()
+        +long getDuration()
+        +boolean isSuccess()
+        +void setResult(Object result)
+        +void setEndTime(long endTime)
+        +void setSuccess(boolean success)
+    }
+}
+
+WorkflowTemplate <|-- BankAccountOpeningWorkflow
+WorkflowTemplate <|-- MobileMoneyAccountOpeningWorkflow
+
+WorkflowService --> WorkflowTemplate : manages
+WorkflowService --> BankAccountOpeningWorkflow : creates
+WorkflowService --> MobileMoneyAccountOpeningWorkflow : creates
+
+WorkflowTemplate --> WorkflowExecutionContext : uses
+
+note right of WorkflowTemplate
+  Template Method Pattern:
+  - Final algorithm skeleton
+  - Abstract hook methods
+  - Common workflow steps
+  - Extensible framework
+end note
+
+note left of BankAccountOpeningWorkflow
+  Concrete Workflow:
+  - Bank-specific validation
+  - Document requirements
+  - Risk assessment
+  - Account generation
+end note
+
+note left of MobileMoneyAccountOpeningWorkflow
+  Concrete Workflow:
+  - Mobile-specific validation
+  - Phone verification
+  - Age verification
+  - Service limits
+end note
+
+note bottom of WorkflowService
+  Workflow Manager:
+  - Workflow registry
+  - Execution orchestration
+  - Logging management
+  - Result tracking
+end note
+
+@enduml

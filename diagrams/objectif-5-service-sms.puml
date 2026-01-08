@@ -1,0 +1,157 @@
+@startuml Objectif5_Service_SMS_Homogeneise
+
+!theme plain
+skinparam classAttributeIconSize 0
+
+title Objectif 5: Service SMS Homogénéisé
+subtitle Adapter Design Pattern
+
+package "SMS Adapter System" {
+    
+    interface ISMSAdapter {
+        +void sendSMS(String destination, String message)
+        +String getProviderName()
+        +boolean isAvailable()
+    }
+    
+    class SMSRequest {
+        -String to
+        -String message
+        -String apiKey
+        +SMSRequest(String to, String message, String apiKey)
+        +String getTo()
+        +String getMessage()
+        +String getApiKey()
+    }
+    
+    class SMSResponse {
+        -boolean success
+        -String messageId
+        -String error
+        +boolean isSuccess()
+        +String getMessageId()
+        +String getError()
+    }
+    
+    package "Provider Adapters" {
+        class SMSAdapterA {
+            -static final String API_URL
+            -static final String API_KEY
+            -HttpClient httpClient
+            -ObjectMapper objectMapper
+            +SMSAdapterA()
+            +void sendSMS(String destination, String message)
+            +String getProviderName()
+            +boolean isAvailable()
+        }
+        
+        class SMSAdapterB {
+            -static final String SOAP_URL
+            -static final String SOAP_NAMESPACE
+            +SMSAdapterB()
+            +void sendSMS(String destination, String message)
+            +String getProviderName()
+            +boolean isAvailable()
+        }
+        
+        class SMSAdapterC {
+            -static final String BASE_URL
+            -static final String API_TOKEN
+            -HttpClient httpClient
+            +SMSAdapterC()
+            +void sendSMS(String destination, String message)
+            +String getProviderName()
+            +boolean isAvailable()
+        }
+        
+        class SMSAdapterD {
+            -static final String API_URL
+            -static final String BEARER_TOKEN
+            -HttpClient httpClient
+            +SMSAdapterD()
+            +void sendSMS(String destination, String message)
+            +String getProviderName()
+            +boolean isAvailable()
+        }
+    }
+    
+    class UnifiedSMSService {
+        -ISMSAdapter primaryAdapter
+        -ISMSAdapter fallbackAdapter
+        -Map<String, ISMSAdapter> availableAdapters
+        +UnifiedSMSService()
+        +void sendSMS(String destination, String message)
+        +void switchProvider(String providerName)
+        +void checkProvidersStatus()
+        -void registerAdapters()
+        -void selectBestAdapters()
+    }
+}
+
+ISMSAdapter <|.. SMSAdapterA
+ISMSAdapter <|.. SMSAdapterB
+ISMSAdapter <|.. SMSAdapterC
+ISMSAdapter <|.. SMSAdapterD
+
+UnifiedSMSService --> ISMSAdapter : uses
+UnifiedSMSService --> SMSAdapterA : creates
+UnifiedSMSService --> SMSAdapterB : creates
+UnifiedSMSService --> SMSAdapterC : creates
+UnifiedSMSService --> SMSAdapterD : creates
+
+SMSAdapterA --> SMSRequest : creates
+SMSAdapterA --> SMSResponse : processes
+SMSAdapterA --> HttpClient : uses
+SMSAdapterA --> ObjectMapper : uses
+
+SMSAdapterB --> SOAPMessage : creates
+SMSAdapterB --> SOAPConnection : uses
+
+SMSAdapterC --> HttpClient : uses
+
+SMSAdapterD --> HttpClient : uses
+
+note right of ISMSAdapter
+  Target Interface:
+  - Unified SMS API
+  - Common contract
+  - Provider abstraction
+end note
+
+note left of SMSAdapterA
+  Adapter for Provider A:
+  - JSON API
+  - HTTP POST
+  - RESTful approach
+end note
+
+note left of SMSAdapterB
+  Adapter for Provider B:
+  - SOAP API
+  - XML messages
+  - WS-* standards
+end note
+
+note left of SMSAdapterC
+  Adapter for Provider C:
+  - Custom URL
+  - GET parameters
+  - Text response
+end note
+
+note left of SMSAdapterD
+  Adapter for Provider D:
+  - Modern REST
+  - Bearer auth
+  - JSON v2 API
+end note
+
+note bottom of UnifiedSMSService
+  Client Service:
+  - Provider management
+  - Automatic fallback
+  - Dynamic switching
+  - Health checking
+end note
+
+@enduml

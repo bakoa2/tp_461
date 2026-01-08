@@ -1,0 +1,119 @@
+@startuml Objectif4_Ressources_Globales
+
+!theme plain
+skinparam classAttributeIconSize 0
+
+title Objectif 4: Ressources Globales
+subtitle Singleton Design Pattern
+
+package "Global Resource Management" {
+    
+    class NotificationService {
+        -static volatile NotificationService instance
+        -static final ReentrantLock lock
+        -ISMSAdapter smsAdapter
+        -Map<String, Object> configuration
+        -List<NotificationListener> listeners
+        -NotificationService()
+        +static NotificationService getInstance()
+        +void setSMSAdapter(ISMSAdapter adapter)
+        +void setConfiguration(String key, Object value)
+        +Object getConfiguration(String key)
+        +void envoyerNotification(String destination, String message)
+        +void addListener(NotificationListener listener)
+        +void removeListener(NotificationListener listener)
+        +void cleanup()
+    }
+    
+    class AuthentificationConfig {
+        -static final AtomicReference<AuthentificationConfig> instance
+        -Map<String, String> defaultMethods
+        -Map<String, Object> securitySettings
+        -AuthentificationConfig()
+        +static AuthentificationConfig getInstance()
+        +String getDefaultMethod(String operatorType)
+        +void setDefaultMethod(String operatorType, String method)
+        +Object getSecuritySetting(String key)
+        +void setSecuritySetting(String key, Object value)
+        +Map<String, String> getAllDefaultMethods()
+    }
+    
+    class EventManager {
+        -static volatile EventManager instance
+        -static final Object lockObject
+        -Map<String, List<EventListener>> subscribers
+        -Map<String, Integer> eventCounters
+        -EventManager()
+        +static EventManager getInstance()
+        +void subscribe(String eventType, EventListener listener)
+        +void unsubscribe(String eventType, EventListener listener)
+        +void publishEvent(Event event)
+        +int getEventCount(String eventType)
+        +Map<String, Integer> getAllEventCounts()
+        +void cleanup()
+    }
+    
+    class Event {
+        -String type
+        -String source
+        -Map<String, Object> data
+        -long timestamp
+        +Event(String type, String source, Map<String, Object> data)
+        +String getType()
+        +String getSource()
+        +Map<String, Object> getData()
+        +long getTimestamp()
+    }
+    
+    interface NotificationListener {
+        +void onNotificationSent(String destination, String message, boolean success)
+    }
+    
+    interface EventListener {
+        +void handleEvent(Event event)
+    }
+    
+    interface ISMSAdapter {
+        +void sendSMS(String destination, String message)
+    }
+}
+
+NotificationService --> NotificationListener : manages
+NotificationService --> ISMSAdapter : uses
+AuthentificationConfig --> Map<String, String> : contains
+AuthentificationConfig --> Map<String, Object> : contains
+EventManager --> EventListener : manages
+EventManager --> Event : processes
+
+note top of NotificationService
+  Singleton Pattern:
+  - Global access point
+  - Thread-safe initialization
+  - Double-checked locking
+  - Resource management
+end note
+
+note top of AuthentificationConfig
+  Singleton Pattern:
+  - AtomicReference for thread-safety
+  - Global configuration
+  - Default authentication methods
+  - Security settings
+end note
+
+note top of EventManager
+  Singleton Pattern:
+  - Event subscription system
+  - Thread-safe operations
+  - Event statistics
+  - Concurrent collections
+end note
+
+note bottom of Event
+  Immutable Event Object:
+  - Thread-safe data structure
+  - Timestamp tracking
+  - Event metadata
+end note
+
+@enduml
