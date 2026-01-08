@@ -1,12 +1,15 @@
 package com.bankingsystem.services;
 
 import com.bankingsystem.interfaces.ISMSAdapter;
+import org.springframework.stereotype.Service;
+import jakarta.annotation.PostConstruct;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service de notifications globales (Pattern Singleton)
  */
+@Service
 public class NotificationService {
     private static volatile NotificationService instance;
     private static final Object lockObject = new Object();

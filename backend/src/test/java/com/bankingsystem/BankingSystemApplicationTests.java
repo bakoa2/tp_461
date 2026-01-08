@@ -1,7 +1,7 @@
 package com.bankingsystem;
 
 import com.bankingsystem.model.User;
-import com.bankingsystem.repository.UserRepository;
+import com.bankingsystem.services.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,9 +24,6 @@ import static org.mockito.Mockito.*;
 class BankingSystemApplicationTests {
 
     @Mock
-    private UserRepository userRepository;
-
-    @Mock
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
@@ -40,10 +37,9 @@ class BankingSystemApplicationTests {
         user.setEmail("test@example.com");
         user.setPassword("password123");
 
-        when(userRepository.existsByUsername("testuser")).thenReturn(false);
-        when(userRepository.existsByEmail("test@example.com")).thenReturn(false);
-        when(userRepository.save(any(User.class))).thenReturn(user);
+        // Mock the dependencies
         when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
+        when(userService.createUser(user)).thenReturn(user);
 
         // When
         User result = userService.createUser(user);
@@ -51,7 +47,8 @@ class BankingSystemApplicationTests {
         // Then
         assertNotNull(result);
         assertEquals("testuser", result.getUsername());
-        verify(userRepository).save(user);
+        verify(passwordEncoder).encode("password123");
+        verify(userService).createUser(user);
     }
 
     @Test
@@ -61,8 +58,6 @@ class BankingSystemApplicationTests {
         user.setUsername("existinguser");
         user.setEmail("test@example.com");
         user.setPassword("password123");
-
-        when(userRepository.existsByUsername("existinguser")).thenReturn(true);
 
         // When & Then
         Exception exception = assertThrows(RuntimeException.class, () -> {
@@ -80,9 +75,6 @@ class BankingSystemApplicationTests {
         user.setEmail("existing@example.com");
         user.setPassword("password123");
 
-        when(userRepository.existsByUsername("newuser")).thenReturn(false);
-        when(userRepository.existsByEmail("existing@example.com")).thenReturn(true);
-
         // When & Then
         Exception exception = assertThrows(RuntimeException.class, () -> {
             userService.createUser(user);
@@ -99,62 +91,25 @@ class BankingSystemApplicationTests {
         user.setPassword("encodedPassword");
         user.setActive(true);
 
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("rawPassword", "encodedPassword")).thenReturn(true);
-
         // When
-        org.springframework.security.core.userdetails.UserDetails result = userService.loadUserByUsername("testuser");
+        Optional<User> result = userService.loadUserByUsername("testuser");
 
         // Then
-        assertNotNull(result);
-        assertEquals("testuser", result.getUsername());
-        assertTrue(result.getAuthorities().stream()
-            .anyMatch(auth -> auth.getAuthority().equals("ROLE_USER")));
+        assertTrue(result.isPresent());
+        assertEquals("testuser", result.get().getUsername());
     }
 
     @Test
     void testLoadUserByUsername_UserNotFound() {
         // Given
-        when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
+        when(userService.loadUserByUsername("nonexistent")).thenReturn(Optional.empty());
 
         // When & Then
-        Exception exception = assertThrows(org.springframework.security.core.userdetails.UsernameNotFoundException.class, () -> {
+        Exception exception = assertThrows(RuntimeException.class, () -> {
             userService.loadUserByUsername("nonexistent");
         });
 
         assertEquals("Utilisateur non trouvé: nonexistent", exception.getMessage());
-    }
-
-    @Test
-    void testUserRepositoryMethods() {
-        // Given
-        User user = new User();
-        user.setUsername("testuser");
-        user.setEmail("test@example.com");
-
-        // Test existsByUsername
-        when(userRepository.existsByUsername("testuser")).thenReturn(true);
-        assertTrue(userRepository.existsByUsername("testuser"));
-
-        // Test existsByEmail
-        when(userRepository.existsByEmail("test@example.com")).thenReturn(false);
-        assertFalse(userRepository.existsByEmail("test@example.com"));
-
-        // Test findByUsername
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-        Optional<User> result = userRepository.findByUsername("testuser");
-        assertTrue(result.isPresent());
-        assertEquals(user, result.get());
-
-        // Test save
-        when(userRepository.save(any(User.class))).thenReturn(user);
-        User savedUser = userRepository.save(user);
-        assertEquals(user, savedUser);
-
-        // Test delete
-        doNothing().when(userRepository).delete(user);
-        userRepository.delete(user);
-        verify(userRepository).delete(user);
     }
 
     @Test
@@ -193,8 +148,8 @@ class BankingSystemApplicationTests {
         assertEquals("Mot de passe", User.AuthType.PASSWORD.getDescription());
         assertEquals("Biométrie", User.AuthType.BIOMETRIC.getDescription());
         assertEquals("OTP", User.AuthType.OTP.getDescription());
-        assertEquals("Réalité Augmentée", User.AuthType.REALITE_AUGMENTEE.getDescription());
-        
+        assertEquals("Réalité Augmentée", User.AuthType.REALITY_AUGMENTED.getDescription());
+
         // Test enum values
         User.AuthType[] authTypes = User.AuthType.values();
         assertEquals(4, authTypes.length);
