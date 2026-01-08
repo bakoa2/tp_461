@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { formatCurrency, formatDate } from '../services/api';
+import { formatDate } from '../services/api';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);

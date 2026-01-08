@@ -117,7 +117,7 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is admin (simplified for demo)
   const isAdmin = () => {
-    return user?.username === 'admin'; // Simplified admin check
+    return state.user?.username === 'admin'; // Fixed: use state.user instead of user
   };
 
   const value = {
